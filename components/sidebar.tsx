@@ -100,7 +100,7 @@ export function Sidebar() {
                       <span>Users</span>
                     </Button>
                   </Link>
-                  <Link href="/settings">
+                  <Link href="#">
                     <Button
                       variant={pathname === "/settings" ? "secondary" : "ghost"}
                       className={cn(

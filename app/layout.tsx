@@ -5,8 +5,9 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { BookmarkProvider } from "@/lib/bookmark-context"
 import { AuthProvider } from "@/lib/auth-context"
-import { ToastProvider } from "@/components/ui/use-toast"
+import { AuthGuard } from "@/components/auth-guard"
 import { Sidebar } from "@/components/sidebar"
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -27,14 +28,15 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <BookmarkProvider>
-              <ToastProvider>
-                <div className="flex h-screen bg-background">
-                  <Sidebar />
-                  <div className="flex-1 overflow-auto">
+              <div className="flex h-screen bg-background">
+                <Sidebar />
+                <div className="flex-1 overflow-auto">
+                  <AuthGuard>
                     <main className="container mx-auto px-4 py-8">{children}</main>
-                  </div>
+                  </AuthGuard>
                 </div>
-              </ToastProvider>
+              </div>
+              <Toaster />
             </BookmarkProvider>
           </AuthProvider>
         </ThemeProvider>

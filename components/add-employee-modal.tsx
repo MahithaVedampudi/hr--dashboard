@@ -17,7 +17,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { addEmployee } from "@/lib/api"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 
 const departments = [
   "Engineering",
@@ -70,9 +70,10 @@ export function AddEmployeeModal({ open, onOpenChange, onEmployeeAdded }: AddEmp
         age: Number.parseInt(formData.age) || 25,
       })
 
+      const employeeName = formData.firstName + " " + formData.lastName
       toast({
         title: "Employee added",
-        description: `${formData.firstName} ${formData.lastName} has been added successfully.`,
+        description: employeeName + " has been added successfully.",
       })
 
       onEmployeeAdded()

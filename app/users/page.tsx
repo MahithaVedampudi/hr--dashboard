@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { UserPlus, Search, Trash2, RefreshCw, Star } from "lucide-react"
 import { AddEmployeeModal } from "@/components/add-employee-modal"
 import { ConfirmDialog } from "@/components/confirm-dialog"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
 
 export default function UsersPage() {
@@ -84,9 +84,10 @@ export default function UsersPage() {
       const success = await removeEmployee(employeeToDelete.id)
       if (success) {
         setEmployees((prev) => prev.filter((e) => e.id !== employeeToDelete.id))
+        const employeeName = employeeToDelete.firstName + " " + employeeToDelete.lastName
         toast({
           title: "Employee removed",
-          description: `${employeeToDelete.firstName} ${employeeToDelete.lastName} has been removed.`,
+          description: employeeName + " has been removed.",
         })
       } else {
         throw new Error("Failed to remove employee")
@@ -110,6 +111,14 @@ export default function UsersPage() {
     ))
   }
 
+  const confirmDescription = employeeToDelete
+    ? "Are you sure you want to remove " +
+      employeeToDelete.firstName +
+      " " +
+      employeeToDelete.lastName +
+      "? This action cannot be undone."
+    : "Are you sure you want to remove this employee? This action cannot be undone."
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -120,7 +129,7 @@ export default function UsersPage() {
 
         <div className="flex gap-2">
           <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={refreshing ? "h-4 w-4 mr-2 animate-spin" : "h-4 w-4 mr-2"} />
             Refresh
           </Button>
 
@@ -179,7 +188,7 @@ export default function UsersPage() {
                       <Avatar className="h-8 w-8">
                         <AvatarImage
                           src={employee.image || "/placeholder.svg"}
-                          alt={`${employee.firstName} ${employee.lastName}`}
+                          alt={employee.firstName + " " + employee.lastName}
                         />
                         <AvatarFallback>
                           {employee.firstName[0]}
@@ -230,7 +239,7 @@ export default function UsersPage() {
         open={confirmDialogOpen}
         onOpenChange={setConfirmDialogOpen}
         title="Remove Employee"
-        description={`Are you sure you want to remove ${employeeToDelete?.firstName} ${employeeToDelete?.lastName}? This action cannot be undone.`}
+        description={confirmDescription}
         onConfirm={handleDeleteConfirm}
         isLoading={isDeleting}
       />
