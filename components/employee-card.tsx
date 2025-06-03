@@ -31,8 +31,15 @@ export function EmployeeCard({ employee }: EmployeeCardProps) {
     ))
   }
 
+  const getRatingColor = (rating: number) => {
+    if (rating >= 4) return "bg-green-500"
+    if (rating >= 3) return "bg-yellow-500"
+    return "bg-red-500"
+  }
+
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200">
+    <Card className="hover:shadow-lg transition-shadow duration-200 overflow-hidden">
+      <div className={`h-2 ${getRatingColor(employee.rating)}`} />
       <CardContent className="p-6">
         <div className="flex items-start space-x-4">
           <Avatar className="h-16 w-16">

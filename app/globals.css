@@ -24,6 +24,11 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    --chart-1: 221.2 83.2% 53.3%;
+    --chart-2: 142.1 76.2% 36.3%;
+    --chart-3: 47.9 95.8% 53.1%;
+    --chart-4: 346.8 77.2% 49.8%;
+    --chart-5: 261.2 83.3% 58%;
   }
 
   .dark {
@@ -46,6 +51,11 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 224.3 76.3% 94.1%;
+    --chart-1: 217.2 91.2% 59.8%;
+    --chart-2: 142.1 70.6% 45.3%;
+    --chart-3: 47.9 95.8% 53.1%;
+    --chart-4: 346.8 77.2% 49.8%;
+    --chart-5: 261.2 83.3% 58%;
   }
 }
 
@@ -56,4 +66,46 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-secondary/50;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Card hover effects */
+.card-hover-effect {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover-effect:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.1);
 }

@@ -2,16 +2,31 @@
 
 import { useState, useEffect } from "react"
 import type { Employee } from "@/lib/types"
-import { fetchEmployees } from "@/lib/api"
+import { fetchEmployees, removeEmployee } from "@/lib/api"
 import { EmployeeCard } from "@/components/employee-card"
 import { SearchFilters } from "@/components/search-filters"
 import { useSearch } from "@/hooks/use-search"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
+import { UserPlus, RefreshCw, Trash2 } from "lucide-react"
+import { AddEmployeeModal } from "@/components/add-employee-modal"
+import { ConfirmDialog } from "@/components/confirm-dialog"
+import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from "@/lib/auth-context"
 
 export default function HomePage() {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [addModalOpen, setAddModalOpen] = useState(false)
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false)
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+
+  const { user } = useAuth()
+  const isAdmin = user?.role === "admin"
+  const { toast } = useToast()
 
   const {
     searchTerm,
@@ -23,21 +38,61 @@ export default function HomePage() {
     filteredEmployees,
   } = useSearch(employees)
 
-  useEffect(() => {
-    const loadEmployees = async () => {
-      try {
-        setLoading(true)
-        const data = await fetchEmployees()
-        setEmployees(data)
-      } catch (err) {
-        setError("Failed to load employees")
-      } finally {
-        setLoading(false)
-      }
+  const loadEmployees = async () => {
+    try {
+      setLoading(true)
+      const data = await fetchEmployees()
+      setEmployees(data)
+      setError(null)
+    } catch (err) {
+      setError("Failed to load employees")
+    } finally {
+      setLoading(false)
     }
+  }
 
+  useEffect(() => {
     loadEmployees()
   }, [])
+
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    await loadEmployees()
+    setRefreshing(false)
+  }
+
+  const handleDeleteClick = (employee: Employee) => {
+    setEmployeeToDelete(employee)
+    setConfirmDialogOpen(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!employeeToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const success = await removeEmployee(employeeToDelete.id)
+      if (success) {
+        setEmployees((prev) => prev.filter((e) => e.id !== employeeToDelete.id))
+        toast({
+          title: "Employee removed",
+          description: `${employeeToDelete.firstName} ${employeeToDelete.lastName} has been removed.`,
+        })
+      } else {
+        throw new Error("Failed to remove employee")
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to remove employee. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+      setConfirmDialogOpen(false)
+      setEmployeeToDelete(null)
+    }
+  }
 
   const availableDepartments = Array.from(new Set(employees.map((emp) => emp.department))).sort()
 
@@ -45,15 +100,34 @@ export default function HomePage() {
     return (
       <div className="text-center py-12">
         <p className="text-red-500">{error}</p>
+        <Button onClick={handleRefresh} className="mt-4">
+          Try Again
+        </Button>
       </div>
     )
   }
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Employee Dashboard</h1>
-        <p className="text-muted-foreground">Manage and track employee performance across your organization</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Employee Dashboard</h1>
+          <p className="text-muted-foreground">Manage and track employee performance across your organization</p>
+        </div>
+
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+
+          {isAdmin && (
+            <Button onClick={() => setAddModalOpen(true)}>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Employee
+            </Button>
+          )}
+        </div>
       </div>
 
       <SearchFilters
@@ -98,7 +172,21 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredEmployees.map((employee) => (
-              <EmployeeCard key={employee.id} employee={employee} />
+              <div key={employee.id} className="relative group">
+                <EmployeeCard employee={employee} />
+                {isAdmin && (
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      className="h-8 w-8 rounded-full"
+                      onClick={() => handleDeleteClick(employee)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
 
@@ -109,6 +197,17 @@ export default function HomePage() {
           )}
         </>
       )}
+
+      <AddEmployeeModal open={addModalOpen} onOpenChange={setAddModalOpen} onEmployeeAdded={loadEmployees} />
+
+      <ConfirmDialog
+        open={confirmDialogOpen}
+        onOpenChange={setConfirmDialogOpen}
+        title="Remove Employee"
+        description={`Are you sure you want to remove ${employeeToDelete?.firstName} ${employeeToDelete?.lastName}? This action cannot be undone.`}
+        onConfirm={handleDeleteConfirm}
+        isLoading={isDeleting}
+      />
     </div>
   )
 }
